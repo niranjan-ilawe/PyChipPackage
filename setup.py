@@ -8,7 +8,7 @@ def readme():
 
 
 setup(
-    name="pygbmfg",
+    name="pychip",
     version="0.0.1",
     description="Package for pulling Chip Mfg and QC data",
     url="https://github.com/niranjan-ilawe/PyChipPackage",
