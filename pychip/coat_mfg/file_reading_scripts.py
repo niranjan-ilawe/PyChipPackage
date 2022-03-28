@@ -12,31 +12,32 @@ def read_chip_ballooning_gsheet(
     sheet1 = ss["Updated Ballooning Data"]
 
     d = {
-        "wo": sheet1.getColumn(1),
-        "day": sheet1.getColumn(2),
-        "test_no": sheet1.getColumn(3),
-        "qc_operator": sheet1.getColumn(4),
-        "qc_date": sheet1.getColumn(5),
-        "coating_date": sheet1.getColumn(6),
-        "coating_round": sheet1.getColumn(7),
-        "replicate": sheet1.getColumn(9),
-        "chip_layout": sheet1.getColumn(10),
-        "tray_temp": sheet1.getColumn(11),
-        "hsv_system": sheet1.getColumn(12),
-        "rt_reagent_b": sheet1.getColumn(13),
-        "tso": sheet1.getColumn(14),
-        "reducing_reagent_b": sheet1.getColumn(15),
-        "rt_enzyme_b": sheet1.getColumn(16),
-        "pbs": sheet1.getColumn(17),
-        "partioning_oil": sheet1.getColumn(18),
-        "sc_gb_strip": sheet1.getColumn(19),
-        "failure_mode": sheet1.getColumn(20),
-        "base_ggf": sheet1.getColumn(21),
-        "critical_pressure": sheet1.getColumn(22),
-        "norm_critical_pressure": sheet1.getColumn(23),
-        "base_ggf_25c": sheet1.getColumn(24),
-        "novec_lot": sheet1.getColumn(26),
-        "novec_lot_date": sheet1.getColumn(27),
+        "chip_type": sheet1.getColumn(1),
+        "wo": sheet1.getColumn(2),
+        "day": sheet1.getColumn(3),
+        "test_no": sheet1.getColumn(4),
+        "qc_operator": sheet1.getColumn(5),
+        "qc_date": sheet1.getColumn(6),
+        "coating_date": sheet1.getColumn(7),
+        "coating_round": sheet1.getColumn(8),
+        "replicate": sheet1.getColumn(10),
+        "chip_layout": sheet1.getColumn(11),
+        "tray_temp": sheet1.getColumn(12),
+        "hsv_system": sheet1.getColumn(13),
+        "rt_reagent_b": sheet1.getColumn(14),
+        "tso": sheet1.getColumn(15),
+        "reducing_reagent_b": sheet1.getColumn(16),
+        "rt_enzyme_b": sheet1.getColumn(17),
+        "pbs": sheet1.getColumn(18),
+        "partioning_oil": sheet1.getColumn(19),
+        "sc_gb_strip": sheet1.getColumn(20),
+        "failure_mode": sheet1.getColumn(21),
+        "base_ggf": sheet1.getColumn(22),
+        "critical_pressure": sheet1.getColumn(23),
+        "norm_critical_pressure": sheet1.getColumn(24),
+        "base_ggf_25c": sheet1.getColumn(25),
+        "novec_lot": sheet1.getColumn(27),
+        "novec_lot_date": sheet1.getColumn(28),
     }
 
     df = pd.DataFrame(d)
@@ -74,6 +75,35 @@ def read_chip_yield_gsheet(sheet_id="1j1o12cNHxU1CUnsv9u-l07PyY6onZa5IrGmAL3WcVT
     nan_value = float("NaN")
     df.replace("", nan_value, inplace=True)
     df = df.dropna(subset=["date"])
+    _clear_credentials()
+
+    return df
+
+
+def read_chip_cust_complaint_gsheet(
+    sheet_id="1j1o12cNHxU1CUnsv9u-l07PyY6onZa5IrGmAL3WcVTc",
+):
+
+    _load_credentials()
+    ss = ezsheets.Spreadsheet(sheet_id)
+    sheet1 = ss["Chip Complaints"]
+
+    d = {
+        "submit_date": sheet1.getColumn(2),
+        "type": sheet1.getColumn(7),
+        "affected": sheet1.getColumn(19),
+        "reason": sheet1.getColumn(20),
+    }
+
+    df = pd.DataFrame(d)
+    df = df[df["type"] == "Chip"]
+    # drop first row
+    # df = df.iloc[1:, :]
+
+    # clean empty rows
+    nan_value = float("NaN")
+    df.replace("", nan_value, inplace=True)
+    df = df.dropna(subset=["submit_date"])
     _clear_credentials()
 
     return df

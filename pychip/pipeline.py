@@ -5,6 +5,7 @@ from pychip.coat_mfg.file_reading_scripts import (
     read_chip_ballooning_gsheet,
     read_chip_error_gsheet,
     read_chip_yield_gsheet,
+    read_chip_cust_complaint_gsheet,
 )
 
 from pychip.coat_mfg.df_creation_scripts import get_coat_yield_data, get_coat_error_data
@@ -49,6 +50,19 @@ def run_chip_pipeline(days=3):
         )
     except:
         print(colored("---- Skipping Chip GSheet Ballooning Data ----", "yellow"))
+
+    print("------ Getting Customer Complaint Data ------")
+    try:
+        df = read_chip_cust_complaint_gsheet()
+        print(colored("---- Uploading Customer Complaint Data ----"))
+        batch_upload_df(
+            conn=conn,
+            df=df,
+            tablename="yield.chip_cust_compaint_g",
+            insert_type="refresh",
+        )
+    except:
+        print(colored("---- Skipping Customer Complaint Data ----", "yellow"))
 
     print("------ Getting Coating Yield Data ------")
     try:
