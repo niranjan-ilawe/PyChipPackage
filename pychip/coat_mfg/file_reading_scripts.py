@@ -212,3 +212,27 @@ def read_chip_error_rev_F(file):
     df_error = df_error.assign(pn=pn, wo=wo)
 
     return df_error
+
+
+def read_runout_data(sheet_id="1x2Terv49S-w4rKJB7HOGv6JJQmkhOblKIAlEkR9RtdU"):
+
+    _load_credentials()
+    ss = ezsheets.Spreadsheet(sheet_id)
+    sheet1 = ss["Chip Inventory Forecast"]
+
+    # df = sheet1.getColumns(startColumn=1, stopColumn=sheet1.rowCount)
+
+    df = sheet1.getRows(startRow=66, stopRow=94)
+    df = pd.DataFrame(df)
+    colnames = sheet1.getRow(4)
+    df = df.set_axis(colnames, axis=1, inplace=False)
+
+    nan_value = float("NaN")
+    df.replace("", nan_value, inplace=True)
+    df = df.dropna(how="all", axis=1)
+
+    df = df.drop(columns=["Category ", "Inventory including higher level parts"])
+    df = df.melt(id_vars=["Item", "Description"], var_name="month", value_name="qty")
+    df = df.rename(columns={"Item": "item", "Description": "descrip"})
+    _clear_credentials()
+    return df

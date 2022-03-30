@@ -6,6 +6,7 @@ from pychip.coat_mfg.file_reading_scripts import (
     read_chip_error_gsheet,
     read_chip_yield_gsheet,
     read_chip_cust_complaint_gsheet,
+    read_runout_data,
 )
 
 from pychip.coat_mfg.df_creation_scripts import get_coat_yield_data, get_coat_error_data
@@ -17,6 +18,16 @@ def run_chip_pipeline(days=3):
     conn = get_postgres_connection(
         service_name="cpdda-postgres", username="cpdda", db_name="cpdda"
     )
+
+    print("------ Getting RunOut GSheet Yield Data ------")
+    try:
+        df = read_runout_data()
+        print(colored("---- Uploading RunOut GSheet Yield Data ----"))
+        batch_upload_df(
+            conn=conn, df=df, tablename="yield.chip_runout_g", insert_type="refresh"
+        )
+    except:
+        print(colored("---- Skipping RunOut GSheet Yield Data ----", "yellow"))
 
     print("------ Getting Coating GSheet Yield Data ------")
     try:
