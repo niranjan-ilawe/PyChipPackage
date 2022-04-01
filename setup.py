@@ -9,7 +9,7 @@ def readme():
 
 setup(
     name="pychip",
-    version="0.0.4",
+    version="0.0.5",
     description="Package for pulling Chip Mfg and QC data",
     url="https://github.com/niranjan-ilawe/PyChipPackage",
     author="Niranjan Ilawe",

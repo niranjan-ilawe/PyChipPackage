@@ -9,7 +9,7 @@ def read_chip_ballooning_gsheet(
 
     _load_credentials()
     ss = ezsheets.Spreadsheet(sheet_id)
-    sheet1 = ss["Updated Ballooning Data"]
+    sheet1 = ss["GEM 55 Ballooning Data"]
 
     d = {
         "chip_type": sheet1.getColumn(1),
