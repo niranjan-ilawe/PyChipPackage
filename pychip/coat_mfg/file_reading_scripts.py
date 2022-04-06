@@ -222,7 +222,7 @@ def read_runout_data(sheet_id="1x2Terv49S-w4rKJB7HOGv6JJQmkhOblKIAlEkR9RtdU"):
 
     # df = sheet1.getColumns(startColumn=1, stopColumn=sheet1.rowCount)
 
-    df = sheet1.getRows(startRow=66, stopRow=94)
+    df = sheet1.getRows(startRow=68, stopRow=96)
     df = pd.DataFrame(df)
     colnames = sheet1.getRow(4)
     df = df.set_axis(colnames, axis=1, inplace=False)
