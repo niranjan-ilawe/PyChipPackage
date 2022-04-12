@@ -2,7 +2,9 @@ from termcolor import colored
 from pydb import get_postgres_connection, batch_upload_df
 
 from pychip.coat_mfg.file_reading_scripts import (
-    read_chip_ballooning_gsheet,
+    read_chip55_ballooning_gsheet,
+    read_chip74_ballooning_gsheet,
+    read_chip84_ballooning_gsheet,
     read_chip_error_gsheet,
     read_chip_yield_gsheet,
     read_chip_cust_complaint_gsheet,
@@ -51,7 +53,10 @@ def run_chip_pipeline(days=3):
 
     print("------ Getting Coating GSheet Ballooning Data ------")
     try:
-        df = read_chip_ballooning_gsheet()
+        df = read_chip55_ballooning_gsheet().append(
+            read_chip74_ballooning_gsheet().append(read_chip84_ballooning_gsheet())
+        )
+
         print(colored("---- Uploading Coating GSheet Ballooning Data ----"))
         batch_upload_df(
             conn=conn,
