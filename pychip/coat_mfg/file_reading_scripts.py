@@ -1,6 +1,7 @@
 import ezsheets
 import pandas as pd
 from pygbmfg.common import _load_credentials, _clear_credentials
+import janitor
 
 
 def read_chip84_ballooning_gsheet(
@@ -340,3 +341,88 @@ def read_runout_data(sheet_id="1x2Terv49S-w4rKJB7HOGv6JJQmkhOblKIAlEkR9RtdU"):
     df = df.rename(columns={"Item": "item", "Description": "descrip"})
     _clear_credentials()
     return df
+
+
+def read_chip_yield_revEFG(file):
+
+    xlsx = pd.ExcelFile(file, engine="openpyxl")
+
+    # try reading sheet named Daily Production
+    try:
+        details = pd.read_excel(xlsx, sheet_name="Summary", header=None)
+        wo = details[details[2] == "WORK ORDER #:"].iloc[0, 5]
+        summary = pd.read_excel(xlsx, sheet_name="Daily Production", header=5)
+        summary = summary.drop(
+            columns=[
+                "HFE-7100 Expiration date (MM/DD/YY)",
+                "Novec-1720 Expiration date (MM/DD/YY)",
+            ]
+        )
+        summary = summary.clean_names()
+        summary = summary[
+            [
+                "round",
+                "day",
+                "date_mm_dd_yy_",
+                "#_of_chips_consumed_per_round",
+                "#_of_chips_failed_per_round",
+                "#_of_chips_routed_to_qc",
+                "#_of_coated_chips_to_inventory_per_round",
+                "day_1",
+                "chips_expiration_date_mm_dd_yy_",
+                "hfe_7100_lot_number",
+                "hfe_7100_bottle_open_date_mm_dd_yy_",
+                "hfe_7100_expiration_date_mm_dd_yy_",
+                "novec_1720_lot_number",
+                "novec_1720_bottle_open_date_mm_dd_yy_",
+                "novec_1720_expiration_date_mm_dd_yy_",
+                "water_concentration_g_m^3_per_round",
+                "temp_°c_per_round",
+            ]
+        ]
+
+        summary = summary.rename(
+            columns={
+                "round": "round",
+                "day": "day",
+                "date_mm_dd_yy_": "date",
+                "#_of_chips_consumed_per_round": "no_of_chips_consumed_per_round",
+                "#_of_chips_failed_per_round": "no_of_chips_failed_per_round",
+                "#_of_chips_routed_to_qc": "no_of_chips_routed_to_qc",
+                "#_of_coated_chips_to_inventory_per_round": "no_of_coated_chips_to_inventory_per_round",
+                "day_1": "day_1",
+                "chips_expiration_date_mm_dd_yy_": "chips_expiration",
+                "hfe_7100_lot_number": "hfe_7100_lot_number",
+                "hfe_7100_bottle_open_date_mm_dd_yy_": "hfe_7100_bottle_open_date",
+                "hfe_7100_expiration_date_mm_dd_yy_": "hfe_7100_expiration_date",
+                "novec_1720_lot_number": "novec_1720_lot_number",
+                "novec_1720_bottle_open_date_mm_dd_yy_": "novec_1720_bottle_open_date",
+                "novec_1720_expiration_date_mm_dd_yy_": "novec_1720_expiration_date",
+                "water_concentration_g_m^3_per_round": "water_concentration_per_round",
+                "temp_°c_per_round": "temp_c_per_round",
+            }
+        )
+        summary = summary.dropna(subset=["date"])
+        summary = summary[summary["no_of_chips_consumed_per_round"] != 0]
+        summary = summary.dropna(subset=["no_of_chips_consumed_per_round"])
+        summary = summary.fillna(method="pad")
+
+        summary["hfe_7100_life_remaining"] = (
+            summary["hfe_7100_expiration_date"] - summary["date"]
+        ).dt.days
+        summary["novec_1720_life_remaining"] = (
+            summary["novec_1720_expiration_date"] - summary["date"]
+        ).dt.days
+        summary["bottle_age_7100"] = (
+            summary["date"] - summary["hfe_7100_bottle_open_date"]
+        ).dt.days
+        summary["bottle_age_1720"] = (
+            summary["date"] - summary["novec_1720_bottle_open_date"]
+        ).dt.days
+
+        summary = summary.assign(wo=wo)
+    except:
+        print(f"Unable to read sheet named: Daily Production")
+        return pd.DataFrame()
+
+    return summary
