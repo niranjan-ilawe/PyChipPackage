@@ -104,6 +104,10 @@ def read_chip74_ballooning_gsheet(
 
     # drop all rows that have a NaN in the norm critical pressure col
     df = df.dropna(subset=["norm_critical_pressure"])
+
+    # shortening pbs lots
+    df['pbs'] = df['pbs'].str[:19]
+
     _clear_credentials()
     return df
 
@@ -153,6 +157,10 @@ def read_chip55_ballooning_gsheet(
     nan_value = float("NaN")
     df.replace("", nan_value, inplace=True)
     df = df.dropna(subset=["norm_critical_pressure"])
+
+    # shortening pbs lots to 20 chars
+    df['pbs'] = df['pbs'].str[:19]
+
     _clear_credentials()
     return df
 
@@ -327,18 +335,26 @@ def read_runout_data(sheet_id="1x2Terv49S-w4rKJB7HOGv6JJQmkhOblKIAlEkR9RtdU"):
 
     # df = sheet1.getColumns(startColumn=1, stopColumn=sheet1.rowCount)
 
-    df = sheet1.getRows(startRow=68, stopRow=96)
+    df = sheet1.getRows(startRow=1, stopRow=sheet1.rowCount)
     df = pd.DataFrame(df)
     colnames = sheet1.getRow(4)
     df = df.set_axis(colnames, axis=1, inplace=False)
+    df = df[df["Category "] == "Projected Inventory w/o production"]
 
     nan_value = float("NaN")
     df.replace("", nan_value, inplace=True)
     df = df.dropna(how="all", axis=1)
 
-    df = df.drop(columns=["Category ", "Inventory including higher level parts"])
+    # drop rows if the Item column has NaN
+    df = df.dropna(subset=['Item'])
+
+    df = df.drop(columns=["Category ", "Inventory including higher level parts", "Lot"])
     df = df.melt(id_vars=["Item", "Description"], var_name="month", value_name="qty")
     df = df.rename(columns={"Item": "item", "Description": "descrip"})
+
+    # drop rows if the Item column has NaN
+    df = df.dropna(subset=['qty'])
+
     _clear_credentials()
     return df
 

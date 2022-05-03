@@ -16,7 +16,7 @@ setup(
     author_email="niranjan.ilawe@10xgenomics.com",
     license="MIT",
     packages=setuptools.find_packages(),
-    install_requires=["pandas", "pybox", "pydb", "ezsheets", "termcolor"],
+    install_requires=["pandas", "pybox", "pydb", "ezsheets", "termcolor", "pyjanitor"],
     test_suite="nose.collector",
     tests_require=["nose"],
     include_package_data=True,
