@@ -31,15 +31,29 @@ def run_chip_pipeline(days=3):
     except:
         print(colored("---- Skipping RunOut GSheet Yield Data ----", "yellow"))
 
-    print("------ Getting Coating GSheet Yield Data ------")
+    print("------ Getting PLSTN Coating GSheet Yield Data ------")
     try:
         df = read_chip_yield_gsheet()
-        print(colored("---- Uploading Coating GSheet Yield Data ----"))
+        # adding PLSTN tag
+        df = df.assign(site = "PLSTN")
+        print(colored("---- Uploading PLSTN Coating GSheet Yield Data ----"))
         batch_upload_df(
             conn=conn, df=df, tablename="yield.chip_mfg_g", insert_type="refresh"
         )
     except:
-        print(colored("---- Skipping Chip GSheet Yield Data ----", "yellow"))
+        print(colored("---- Skipping PLSTN Chip GSheet Yield Data ----", "yellow"))
+
+    print("------ Getting SG Coating GSheet Yield Data ------")
+    try:
+        df = read_chip_yield_gsheet(sheet_id="15ScGeRsIRwRZxh7igwzKYTrinimMth4eY9fHaT0hBbs")
+        # adding PLSTN tag
+        df = df.assign(site = "SG")
+        print(colored("---- Uploading SG Coating GSheet Yield Data ----"))
+        batch_upload_df(
+            conn=conn, df=df, tablename="yield.chip_mfg_g", insert_type="refresh"
+        )
+    except:
+        print(colored("---- Skipping SG Chip GSheet Yield Data ----", "yellow"))
 
     print("------ Getting Coating GSheet Error Data ------")
     try:
