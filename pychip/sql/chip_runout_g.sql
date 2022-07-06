@@ -18,3 +18,14 @@ CREATE TABLE yield.chip_mfg_g (
 	inventory numeric NULL,
     "site" varchar(10) NULL
 );
+
+DROP TABLE yield.chip_mfg_error_g;
+
+CREATE TABLE yield.chip_mfg_error_g (
+	wo varchar(20) NULL,
+	"date" varchar(20) NULL,
+	qty numeric NULL,
+	process varchar(50) NULL,
+	reason varchar(100) NULL,
+    "site" varchar(10) NULL
+);

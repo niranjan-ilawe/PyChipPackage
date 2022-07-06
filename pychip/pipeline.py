@@ -51,7 +51,11 @@ def run_chip_pipeline(days=3):
 
     print("------ Getting Coating GSheet Error Data ------")
     try:
-        df = read_chip_error_gsheet()
+        df1 = read_chip_error_gsheet()
+        df1 = df1.assign(site = "PLSTN")
+        df2 = read_chip_error_gsheet(sheet_id="15ScGeRsIRwRZxh7igwzKYTrinimMth4eY9fHaT0hBbs")
+        df2 = df2.assign(site = "SG")
+        df = df1.append(df2)
         print(colored("---- Uploading Coating GSheet Error Data ----"))
         batch_upload_df(
             conn=conn, df=df, tablename="yield.chip_mfg_error_g", insert_type="refresh"
