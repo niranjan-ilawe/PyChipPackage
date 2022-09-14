@@ -1,7 +1,8 @@
-import ezsheets
+import ezsheets, re
 import pandas as pd
 from pygbmfg.common import _load_credentials, _clear_credentials
-import janitor
+from pydb import get_snowflake_connection, get_postgres_connection
+import datetime as dt
 
 
 def read_chip84_ballooning_gsheet(
@@ -442,3 +443,119 @@ def read_chip_yield_revEFG(file):
         return pd.DataFrame()
 
     return summary
+
+
+def read_wo_misses_gsheet():
+    snowflake_conn = get_snowflake_connection()
+    postgres_conn = get_postgres_connection()
+
+    #last_modified_date = str(date.today() - timedelta(days=10))
+    last_modified_date = "2022-06-30"
+    print(f"Looking for new data since {last_modified_date} ....")
+
+
+    query = f"""
+    select distinct
+    work_order_number, i.item_name, i.item_description, mfg_area, mfg_process, cast(creation_date as date) as creation_date, 
+    cast(actual_start_date as date) as actual_start_date, 
+    cast(wo_required_date as date) as wo_required_date, 
+    cast(wo_completion_date as date) as wo_completion_date, 
+    planned_start_quantity, completed_quantity,
+    datediff('day', wo_required_date, wo_completion_date) as timediff
+
+    from PROD_ENT_PRESENTATION_DB.FACTS.WORK_ORDERS_F f
+    join PROD_ENT_PRESENTATION_DB.DIMS.WORK_ORDERS_D d
+    on f.wo_skey = d.wo_skey
+    join PROD_ENT_PRESENTATION_DB.DIMS.ITEM_D i
+    on f.item_skey = i.item_skey
+    where cast(wo_completion_date as date) > '{last_modified_date}'
+    and cast(wo_completion_date as date) <> '9999-01-01'
+    and distribution_center in ('10X Pleasanton', '10X Singapore MFG')
+    order by cast(wo_completion_date as date)
+    ;
+    """
+
+    df = pd.read_sql(query, snowflake_conn)
+    df['ON_TIME'] = df['TIMEDIFF'].apply(lambda x: 'TRUE' if x <= 3 else 'FALSE')
+
+    _load_credentials()
+    ss = ezsheets.Spreadsheet("1XxNS-GYWkhqzooASpQbn-wwH_YlPvxZlZ62xFGzI9Ek")
+
+    sheet = ss['Sheet1']
+
+    #sheet.updateRows(result)
+
+    orig = sheet.getRows()
+    df_orig = pd.DataFrame(orig[1:], columns = orig[0])
+    nan_value = float("NaN")
+    df_orig.replace("", nan_value, inplace=True)
+  
+    df_orig.dropna(how='all', axis=1, inplace=True)
+    df_orig.dropna(how='all', inplace=True)
+
+
+    df_orig = df_orig[['WORK_ORDER_NUMBER', "Reason_Code_1", "Reason_Code_2"]]
+    df_orig = df_orig.drop_duplicates()
+
+    ## Get QC data
+    query = """
+    select clean_wo, status, pass_rate
+    from yield.qc_data
+    """
+    qc = pd.read_sql(query, postgres_conn)
+
+    qc['list'] = qc['pass_rate'].apply(lambda x: re.findall('\\d+.\\d+', x))
+    qc['pass_rate'] = qc['list'].apply(lambda x: int(bool(x)) if not bool(x) else x[0]).astype(float)
+
+    # remove WO that do not have dispositions yet
+    qc = qc[qc['status'].str.contains('Troubleshooting|Scrap|Rework|Pass|Return to Vendor|Use As Is')]
+
+    # convert status text to int
+    qc['status_int'] = qc['status'].apply(lambda x: 1 if x in ('Pass', 'Use As Is') else 0)
+
+    # get status and pass_rate means
+    qc = qc.groupby('clean_wo', as_index=False).agg({'pass_rate':'mean', 'status_int':'mean'})
+
+    qc['first_pass'] = qc['pass_rate'].apply(lambda x: "Fail" if x < 100 else "Pass")
+    qc['final_pass'] = qc['status_int'].apply(lambda x: "Fail" if x < 1 else "Pass")
+    qc['clean_wo'] = qc['clean_wo'].apply(lambda x: "WO" + x)
+    qc = qc[['clean_wo', 'first_pass', 'final_pass']]
+    qc = qc.rename(columns={"clean_wo": "WORK_ORDER_NUMBER"})
+
+    df_orig = df_orig.merge(qc, on = "WORK_ORDER_NUMBER", how = 'left')
+
+    final = df.merge(df_orig, on = 'WORK_ORDER_NUMBER', how= 'left')
+    #final = df_orig.merge(df, on = "WORK_ORDER_NUMBER", how = "outer")
+    #df_orig['WORK_ORDER_NUMBER'] = df_orig['WORK_ORDER_NUMBER'].astype('string')
+
+    final = final[['WORK_ORDER_NUMBER', 
+               'ITEM_NAME', 
+               'ITEM_DESCRIPTION',
+               'MFG_AREA',
+               'MFG_PROCESS',
+               'CREATION_DATE',
+               'ACTUAL_START_DATE',
+               'WO_REQUIRED_DATE',
+               'WO_COMPLETION_DATE',
+               'PLANNED_START_QUANTITY',
+               'COMPLETED_QUANTITY',
+               'TIMEDIFF',
+               'ON_TIME',
+               'Reason_Code_1',
+               'Reason_Code_2',
+               'first_pass',
+               'final_pass'
+                ]]
+
+    final['CREATION_DATE'] = final['CREATION_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
+    final['ACTUAL_START_DATE'] = final['ACTUAL_START_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
+    final['WO_REQUIRED_DATE'] = final['WO_REQUIRED_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
+    final['WO_COMPLETION_DATE'] = final['WO_COMPLETION_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
+    final = final.fillna('')
+
+    result = final.values.tolist()
+    sheet.updateRows(result, startRow=2)
+
+    _clear_credentials()
+
+    return final
