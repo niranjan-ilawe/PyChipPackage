@@ -14,8 +14,8 @@ create table yield.wo_misses (
     COMPLETED_QUANTITY numeric null,
     TIMEDIFF numeric null,
     ON_TIME varchar(20) null,
-    "Reason code 1" varchar(100) null,
-    "Reason code 2" varchar(100) null,
+    Reason_Code_1 varchar(100) null,
+    Reason_Code_2 varchar(100) null,
     first_pass varchar(30) null,
     final_pass varchar(30) null
 );
