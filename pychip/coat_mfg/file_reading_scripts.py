@@ -450,13 +450,17 @@ def read_wo_misses_gsheet():
     postgres_conn = get_postgres_connection()
 
     #last_modified_date = str(date.today() - timedelta(days=10))
-    last_modified_date = "2022-06-30"
+    last_modified_date = "2022-04-01"
     print(f"Looking for new data since {last_modified_date} ....")
 
 
     query = f"""
     select distinct
-    work_order_number, i.item_name, i.item_description, mfg_area, mfg_process, cast(creation_date as date) as creation_date, 
+    work_order_number, 
+    i.item_name, 
+    i.item_description, 
+    --mfg_area, mfg_process, 
+    cast(creation_date as date) as creation_date, 
     cast(actual_start_date as date) as actual_start_date, 
     cast(wo_required_date as date) as wo_required_date, 
     cast(wo_completion_date as date) as wo_completion_date, 
@@ -494,7 +498,7 @@ def read_wo_misses_gsheet():
     df_orig.dropna(how='all', inplace=True)
 
 
-    df_orig = df_orig[['WORK_ORDER_NUMBER', "Reason_Code_1", "Reason_Code_2"]]
+    df_orig = df_orig[['WORK_ORDER_NUMBER', 'MFG_AREA', 'MFG_PROCESS', "Reason_Code_1", "Reason_Code_2"]]
     df_orig = df_orig.drop_duplicates()
 
     ## Get QC data
