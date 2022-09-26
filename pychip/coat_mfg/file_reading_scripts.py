@@ -497,8 +497,15 @@ def read_wo_misses_gsheet():
     df_orig.dropna(how='all', axis=1, inplace=True)
     df_orig.dropna(how='all', inplace=True)
 
+    # get manually entered mapping from google sheet
+    #mapping = df_orig[['ITEM_NAME', 'MFG_AREA', 'MFG_PROCESS']].drop_duplicates(keep = "last")
+    #df = df.fillna(mapping)
 
-    df_orig = df_orig[['WORK_ORDER_NUMBER', 'MFG_AREA', 'MFG_PROCESS', "Reason_Code_1", "Reason_Code_2"]]
+    area_map = df_orig[['ITEM_NAME', 'MFG_AREA', 'MFG_PROCESS']].drop_duplicates()
+
+    df = df.merge(area_map, how='left', on='ITEM_NAME')
+
+    df_orig = df_orig[['WORK_ORDER_NUMBER', "Reason_Code_1", "Reason_Code_2"]]
     df_orig = df_orig.drop_duplicates()
 
     ## Get QC data
