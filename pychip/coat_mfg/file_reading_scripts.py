@@ -463,19 +463,22 @@ def read_wo_misses_gsheet():
     cast(creation_date as date) as creation_date, 
     cast(actual_start_date as date) as actual_start_date, 
     cast(wo_required_date as date) as wo_required_date, 
+    cast(actual_completion_date as date) as actual_completion_date,
     cast(wo_completion_date as date) as wo_completion_date, 
     planned_start_quantity, completed_quantity,
     datediff('day', wo_required_date, wo_completion_date) as timediff
-
     from PROD_ENT_PRESENTATION_DB.FACTS.WORK_ORDERS_F f
     join PROD_ENT_PRESENTATION_DB.DIMS.WORK_ORDERS_D d
     on f.wo_skey = d.wo_skey
     join PROD_ENT_PRESENTATION_DB.DIMS.ITEM_D i
     on f.item_skey = i.item_skey
-    where cast(wo_completion_date as date) > '{last_modified_date}'
-    and cast(wo_completion_date as date) <> '9999-01-01'
+    where 1=1
+    and cast(wo_completion_date as date) > '2022-04-01'
+    and cast(creation_date as date) > '2022-01-01'
     and distribution_center in ('10X Pleasanton', '10X Singapore MFG')
-    order by cast(wo_completion_date as date)
+    --and wo_status_name in ('Closed', 'Complete')
+    --and work_order_number = 'WO166250'
+    order by cast(creation_date as date)
     ;
     """
 
@@ -547,6 +550,7 @@ def read_wo_misses_gsheet():
                'CREATION_DATE',
                'ACTUAL_START_DATE',
                'WO_REQUIRED_DATE',
+               'ACTUAL_COMPLETION_DATE',
                'WO_COMPLETION_DATE',
                'PLANNED_START_QUANTITY',
                'COMPLETED_QUANTITY',
@@ -561,6 +565,7 @@ def read_wo_misses_gsheet():
     final['CREATION_DATE'] = final['CREATION_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
     final['ACTUAL_START_DATE'] = final['ACTUAL_START_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
     final['WO_REQUIRED_DATE'] = final['WO_REQUIRED_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
+    final['ACTUAL_COMPLETION_DATE'] = final['ACTUAL_COMPLETION_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
     final['WO_COMPLETION_DATE'] = final['WO_COMPLETION_DATE'].apply(lambda x: dt.date.strftime(x, "%Y-%m-%d"))
     final = final.fillna('')
 
