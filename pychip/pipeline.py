@@ -22,15 +22,15 @@ def run_chip_pipeline(days=3):
         service_name="cpdda-postgres", username="cpdda", db_name="cpdda"
     )
 
-    print("------ Getting WO Misses GSheet Yield Data ------")
-    try:
-        df = read_wo_misses_gsheet()
-        print(colored("---- Uploading WO Misses GSheet Yield Data ----"))
-        batch_upload_df(
-            conn=conn, df=df, tablename="yield.wo_misses", insert_type="refresh"
-        )
-    except:
-        print(colored("---- Skipping WO Misses GSheet Yield Data ----", "yellow"))
+    #print("------ Getting WO Misses GSheet Yield Data ------")
+    #try:
+    #    df = read_wo_misses_gsheet()
+    #    print(colored("---- Uploading WO Misses GSheet Yield Data ----"))
+    #    batch_upload_df(
+    #        conn=conn, df=df, tablename="yield.wo_misses", insert_type="refresh"
+    #    )
+    #except:
+    #    print(colored("---- Skipping WO Misses GSheet Yield Data ----", "yellow"))
 
 
     print("------ Getting RunOut GSheet Yield Data ------")

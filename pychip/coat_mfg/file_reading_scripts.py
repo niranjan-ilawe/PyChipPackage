@@ -456,28 +456,37 @@ def read_wo_misses_gsheet():
 
     query = f"""
     select distinct
+    wo_status_name,
     work_order_number, 
     i.item_name, 
     i.item_description, 
     --mfg_area, mfg_process, 
+    work_center_name,
     cast(creation_date as date) as creation_date, 
     cast(actual_start_date as date) as actual_start_date, 
     cast(wo_required_date as date) as wo_required_date, 
-    cast(actual_completion_date as date) as actual_completion_date,
+    cast(actual_completion_date as date) as actual_completion_date, 
     cast(wo_completion_date as date) as wo_completion_date, 
+    --cast(closed_date as date) as closed_date,
     planned_start_quantity, completed_quantity,
     datediff('day', wo_required_date, wo_completion_date) as timediff
+    --closed_date_skey, actual_completion_date_skey, wo_completion_date_skey
+    --*
     from PROD_ENT_PRESENTATION_DB.FACTS.WORK_ORDERS_F f
     join PROD_ENT_PRESENTATION_DB.DIMS.WORK_ORDERS_D d
     on f.wo_skey = d.wo_skey
     join PROD_ENT_PRESENTATION_DB.DIMS.ITEM_D i
     on f.item_skey = i.item_skey
     where 1=1
-    and cast(wo_completion_date as date) > '2022-04-01'
-    and cast(creation_date as date) > '2022-01-01'
+    and ((closed_date_skey > '20220101' and closed_date_skey <> '99990101') 
+         or (actual_completion_date_skey > '20220101' and actual_completion_date_skey <> '99990101') 
+         or (wo_completion_date_skey > '20220101' and wo_completion_date_skey <> '99990101'))
+    --and released_date_skey < '20221001'
+    --and actual_completion_date_skey > '20220802'
     and distribution_center in ('10X Pleasanton', '10X Singapore MFG')
-    --and wo_status_name in ('Closed', 'Complete')
-    --and work_order_number = 'WO166250'
+    and wo_status_name not in ('Cancelled')
+    --and work_order_number = 'WO164790'
+    --and completed_quantity = '0'
     order by cast(creation_date as date)
     ;
     """
@@ -542,11 +551,13 @@ def read_wo_misses_gsheet():
     #final = df_orig.merge(df, on = "WORK_ORDER_NUMBER", how = "outer")
     #df_orig['WORK_ORDER_NUMBER'] = df_orig['WORK_ORDER_NUMBER'].astype('string')
 
-    final = final[['WORK_ORDER_NUMBER', 
+    final = final[['WO_STATUS_NAME',
+                'WORK_ORDER_NUMBER', 
                'ITEM_NAME', 
                'ITEM_DESCRIPTION',
                'MFG_AREA',
                'MFG_PROCESS',
+               'WORK_CENTER_NAME',
                'CREATION_DATE',
                'ACTUAL_START_DATE',
                'WO_REQUIRED_DATE',
