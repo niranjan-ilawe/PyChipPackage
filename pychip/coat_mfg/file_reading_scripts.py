@@ -445,7 +445,7 @@ def read_chip_yield_revEFG(file):
     return summary
 
 
-def read_wo_misses_gsheet():
+#def read_wo_misses_gsheet():
     snowflake_conn = get_snowflake_connection()
     postgres_conn = get_postgres_connection()
 
