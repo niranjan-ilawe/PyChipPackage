@@ -170,7 +170,7 @@ def read_chip_yield_gsheet(sheet_id="1j1o12cNHxU1CUnsv9u-l07PyY6onZa5IrGmAL3WcVT
 
     _load_credentials()
     ss = ezsheets.Spreadsheet(sheet_id)
-    sheet1 = ss["Step Coat KPI"]
+    sheet1 = ss["Coating KPI"]
 
     d = {
         "date": sheet1.getColumn(1),
