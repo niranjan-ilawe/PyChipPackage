@@ -9,7 +9,7 @@ from pychip.coat_mfg.file_reading_scripts import (
     read_chip_yield_gsheet,
     read_chip_cust_complaint_gsheet,
     read_runout_data,
-    read_wo_misses_gsheet
+    #read_wo_misses_gsheet
 )
 
 from pychip.coat_mfg.df_creation_scripts import get_coat_yield_data, get_coat_error_data
